@@ -1,3 +1,4 @@
+from Src.Core.common import common
 
 """
 Репозиторий данных
@@ -10,15 +11,58 @@ class reposity:
         return self.__data
     
     """
-    Универсальный ключ для модели
+    Ключ для единц измерений
     """
     @staticmethod
-    def get_key_for_model(model_type: type) -> str:
-        return model_type.__name__.lower()
+    def range_key():
+        return "range_model"
+    
 
-    # Инициализация
+    """
+    Ключ для категорий
+    """
+    @staticmethod
+    def group_key():
+        return "group_model"
+    
+
+    """
+    Ключ для номенклатуры
+    """
+    @staticmethod
+    def nomenclature_key():
+        return "nomenclature_model"
+    
+
+    """
+    Ключ для рецептов
+    """
+    @staticmethod
+    def receipt_key():
+        return "receipt_model"
+    
+    """
+    Получить список всех ключей
+    Источник: https://github.com/Alyona1619
+    """
+    @staticmethod
+    def keys() -> list:
+        result = []
+        methods = [method for method in dir(reposity) if
+                    callable(getattr(reposity, method)) and method.endswith('_key')]
+        for method in methods:
+            key = getattr(reposity, method)()
+            result.append(key)
+
+        return result
+
+    
+    """
+    Инициализация
+    """
     def initalize(self):
-        self.__data[reposity.get_key_for_model('range_model')] = []
-        self.__data[reposity.get_key_for_model('group_model')] = []
-        self.__data[reposity.get_key_for_model('nomenclature_model')] = []
-        self.__data[reposity.get_key_for_model('receipt_model')] = []
+        keys = reposity.keys()
+        for key in keys:
+            self.__data[ key ] = []
+    
+    
