@@ -1,15 +1,39 @@
 import connexion
-from flask import request
+from flask import request, jsonify
+from Src.start_service import start_service
+from Src.reposity import reposity
+from Src.Logics.factory_entities import factory_entities
 
 app = connexion.FlaskApp(__name__)
+service = start_service()
+service.start()  
+factory = factory_entities()
 
-"""
-Проверить доступность REST API
-"""
 @app.route("/api/accessibility", methods=['GET'])
-def formats():
+def accessibility():
     return "SUCCESS"
 
+@app.route("/api/data/<entity>", methods=['GET'])
+def get_data(entity):
+    fmt = request.args.get('format', 'csv').lower()
+    key_map = {
+        "nomenclature": reposity.nomenclature_key(),
+        "range": reposity.range_key(),
+        "receipt": reposity.receipt_key(),
+        "group": reposity.group_key()
+    }
+
+    if entity not in key_map:
+        return jsonify({"error": "Unknown entity"}), 404
+
+    data_list = service.data[key_map[entity]]
+
+    try:
+        logic = factory.create(fmt)
+        text = logic.build(fmt, data_list)
+        return text, 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port = 8080)
+    app.run(host="0.0.0.0", port=8080)
