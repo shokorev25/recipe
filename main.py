@@ -3,6 +3,7 @@ from flask import request, jsonify
 from Src.start_service import start_service
 from Src.reposity import reposity
 from Src.Logics.factory_entities import factory_entities
+from Src.Core.convert_factory import convert_factory
 
 app = connexion.FlaskApp(__name__)
 service = start_service()
@@ -34,6 +35,20 @@ def get_data(entity):
         return text, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/receipts", methods=['GET'])
+def get_receipts():
+    receipts = service.data[reposity.receipt_key()]
+    result = [factory.convert(r) for r in receipts]
+    return jsonify(result)
+
+@app.route("/api/receipt/<code>", methods=['GET'])
+def get_receipt(code):
+    receipts = service.data[reposity.receipt_key()]
+    receipt = next((r for r in receipts if r.unique_code == code), None)
+    if not receipt:
+        return jsonify({"error":"Receipt not found"}), 404
+    return jsonify(factory.convert(receipt))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
