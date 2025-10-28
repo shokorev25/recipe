@@ -1,5 +1,6 @@
 import abc
 from datetime import datetime
+from Src.Core.entity_model import entity_model
 
 class abstract_convertor(abc.ABC):
     @abc.abstractmethod
@@ -32,7 +33,6 @@ class datetime_convertor(abstract_convertor):
                 result[attr] = value.isoformat()
         return result
 
-from Src.Core.entity_model import entity_model
 class reference_convertor(abstract_convertor):
     def convert(self, obj) -> dict:
         result = {}
