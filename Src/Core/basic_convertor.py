@@ -9,11 +9,9 @@ class basic_convertor(abstract_convertor):
         if obj is None:
             return result
 
-        # Если это простой тип — возвращаем как есть
         if isinstance(obj, (str, int, float, bool)):
             return {"value": obj}
 
-        # Если это объект — проходим по всем свойствам
         for attr in dir(obj):
             if not attr.startswith("_"):
                 value = getattr(obj, attr)
