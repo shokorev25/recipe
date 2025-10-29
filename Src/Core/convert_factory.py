@@ -1,79 +1,116 @@
-from typing import Any, Dict, Set
-from datetime import datetime
-from Src.Core.abstract_convertor import basic_convertor, datetime_convertor, reference_convertor
+from datetime import datetime, date
+from typing import Any
+from Src.Core.basic_convertor import basic_convertor
+from Src.Core.datetime_convertor import datetime_convertor
+from Src.Core.reference_convertor import reference_convertor
+from Src.Core.abstract_model import abstact_model
+from Src.Core.common import common
 
 class convert_factory:
+
     def __init__(self):
         self.basic = basic_convertor()
         self.dt = datetime_convertor()
         self.ref = reference_convertor()
 
-    def convert(self, obj: Any) -> Dict[str, Any]:
-        visited: Set[int] = set()
-        return self._convert_obj(obj, visited)
+    def convert(self, obj: Any):
+        seen = set()
+        return self._convert(obj, seen)
 
-    def _is_primitive(self, value: Any) -> bool:
-        return isinstance(value, (str, int, float, bool))
+    def _primitive(self, obj: Any):
+        if isinstance(obj, (str, int, float, bool)):
+            return obj
+        return None
 
-    def _convert_obj(self, obj: Any, visited: Set[int]) -> Any:
+    def _is_datetime(self, obj: Any) -> bool:
+        return isinstance(obj, (datetime, date))
+
+    def _is_iterable(self, obj: Any) -> bool:
+        return isinstance(obj, (list, tuple, set))
+
+    def _convert(self, obj: Any, seen: set):
         if obj is None:
             return None
 
-        if self._is_primitive(obj):
-            return obj
+        prim = self._primitive(obj)
+        if prim is not None:
+            return prim
 
-        if isinstance(obj, datetime):
-            return obj.isoformat()
+        if self._is_datetime(obj):
+            try:
+                return obj.isoformat()
+            except Exception:
+                return str(obj)
 
-        if isinstance(obj, (list, tuple, set)):
-            return [self._convert_obj(item, visited) for item in obj]
+        try:
+            obj_id = id(obj)
+        except Exception:
+            obj_id = None
+
+        if obj_id is not None:
+            if obj_id in seen:
+                return "<recursion>"
+            seen.add(obj_id)
 
         if isinstance(obj, dict):
             result = {}
             for k, v in obj.items():
-                result[k] = self._convert_obj(v, visited)
+                if isinstance(k, (str, int, float, bool)):
+                    key = k
+                else:
+                    key = str(k)
+                result[key] = self._convert(v, seen)
+            if obj_id is not None:
+                seen.discard(obj_id)
             return result
 
-        oid = id(obj)
-        if oid in visited:
-            return None
-        visited.add(oid)
+        if self._is_iterable(obj):
+            result = [self._convert(item, seen) for item in obj]
+            if obj_id is not None:
+                seen.discard(obj_id)
+            return result
 
-        try:
-            ref_dict = self.ref.convert(obj)
-        except Exception:
-            ref_dict = {}
-
-        try:
-            basic_dict = self.basic.convert(obj)
-        except Exception:
-            basic_dict = {}
-
-        try:
-            dt_dict = self.dt.convert(obj)
-        except Exception:
-            dt_dict = {}
-
-        result: Dict[str, Any] = {}
-        result.update(basic_dict)
-        result.update(dt_dict)
-        result.update(ref_dict)
-
-        for attr in dir(obj):
-            if attr.startswith("_"):
-                continue
+        if isinstance(obj, abstact_model):
+            base = self.ref.convert(obj)
             try:
-                value = getattr(obj, attr)
+                fields = common.get_fields(obj)
             except Exception:
-                continue
-            if callable(value):
-                continue
-            if attr in result:
-                continue
-            converted_value = self._convert_obj(value, visited)
-            if converted_value is not None:
-                result[attr] = converted_value
+                fields = []
 
-        visited.remove(oid)
-        
-        return result
+            for f in fields:
+                try:
+                    value = getattr(obj, f)
+                    base[f] = self._convert(value, seen)
+                except Exception:
+                    base[f] = None
+
+            if obj_id is not None:
+                seen.discard(obj_id)
+            return base
+
+        try:
+            fields = common.get_fields(obj)
+        except Exception:
+            fields = []
+
+        if fields:
+            result = {}
+            for f in fields:
+                try:
+                    value = getattr(obj, f)
+                except Exception:
+                    value = None
+                result[f] = self._convert(value, seen)
+            if obj_id is not None:
+                seen.discard(obj_id)
+            return result
+
+        try:
+            text = str(obj)
+            if obj_id is not None:
+                seen.discard(obj_id)
+            return text
+        except Exception:
+            if obj_id is not None:
+                seen.discard(obj_id)
+            return None
