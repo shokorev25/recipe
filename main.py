@@ -3,11 +3,13 @@ from flask import request, jsonify
 from Src.start_service import start_service
 from Src.reposity import reposity
 from Src.Logics.factory_entities import factory_entities
+from Src.Core.convert_factory import convert_factory
 
 app = connexion.FlaskApp(__name__)
 service = start_service()
-service.start()  
+service.start()
 factory = factory_entities()
+converter = convert_factory()
 
 @app.route("/api/accessibility", methods=['GET'])
 def accessibility():
@@ -29,11 +31,29 @@ def get_data(entity):
     data_list = service.data[key_map[entity]]
 
     try:
+        if fmt == "json":
+            converted = [converter.convert(item) for item in data_list]
+            return jsonify(converted)
         logic = factory.create(fmt)
         text = logic.build(fmt, data_list)
         return text, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/receipts", methods=['GET'])
+def get_receipts():
+    receipts = service.data[reposity.receipt_key()]
+    result = [converter.convert(r) for r in receipts]
+    return jsonify(result), 200
+
+@app.route("/api/receipt/<code>", methods=['GET'])
+def get_receipt(code):
+    receipts = service.data[reposity.receipt_key()]
+    receipt = next((r for r in receipts if r.unique_code == code), None)
+    if not receipt:
+        return jsonify({"error": "Receipt not found"}), 404
+    result = converter.convert(receipt)
+    return jsonify(result), 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
