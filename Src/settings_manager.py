@@ -5,7 +5,6 @@ from Src.Core.common import common
 import os
 import json
 
-#####################################################
 # Менеджер настроек
 class settings_manager:
     __full_file_name: str = ""
@@ -39,23 +38,19 @@ class settings_manager:
     def load(self) -> bool:
         if self.__full_file_name == "":
             raise operation_exception("Не найден файл настроек!")
-
         try:
             with open(self.__full_file_name, 'r', encoding='utf-8') as file_instance:
                 settings = json.load(file_instance)
-
                 if "company" in settings.keys():
                     data = settings["company"]
                     self.convert(data)
-
-                # Добавим загрузку формата ответа
                 if "response_format" in settings.keys():
                     self.__settings.response_format = settings["response_format"]
-
+                if "first_start" in settings.keys():
+                    self.__settings.first_start = settings["first_start"]
             return True
         except Exception as ex:
-            print(f"[ERROR] Load settings: {ex}")
-            return False
+            raise operation_exception(f"Load settings: {ex}")
 
     def convert(self, data: dict) -> bool:
         validator.validate(data, dict)
@@ -65,8 +60,7 @@ class settings_manager:
             for key in matching_keys:
                 setattr(self.__settings.company, key, data[key])
         except Exception as ex:
-            print(f"[ERROR] Convert: {ex}")
-            return False
+            raise operation_exception(f"Convert: {ex}")
         return True
 
     def set_default(self):
@@ -76,3 +70,4 @@ class settings_manager:
         self.__settings = settings_model()
         self.__settings.company = company
         self.__settings.response_format = "csv"
+        self.__settings.first_start = True
