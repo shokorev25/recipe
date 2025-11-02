@@ -31,10 +31,20 @@ class receipt_model(entity_model):
     def steps(self) -> list:
         return self.__steps
     
+    @steps.setter
+    def steps(self, value: list):
+        validator.validate(value, list)
+        self.__steps = value
+    
     # Состав
     @property
     def composition(self) -> list:
         return self.__composition
+    
+    @composition.setter
+    def composition(self, value: list):
+        validator.validate(value, list)
+        self.__composition = value
     
     # Время приготовления
     @property

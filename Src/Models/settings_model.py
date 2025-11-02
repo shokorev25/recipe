@@ -1,11 +1,14 @@
 from Src.Models.company_model import company_model
 from Src.Core.validator import validator
 
-######################################
-# Модель настроек приложения
+"""
+Модель настроек приложения
+"""
+
 class settings_model:
     __company: company_model = None
-    __response_format: str = "csv"  # формат по умолчанию
+    __response_format: str = "csv" 
+    __first_start: bool = True
 
     # Текущая организация
     @property
@@ -26,3 +29,12 @@ class settings_model:
     def response_format(self, value: str):
         validator.validate(value, str)
         self.__response_format = value.strip().lower()
+
+    @property
+    def first_start(self) -> bool:
+        return self.__first_start
+
+    @first_start.setter
+    def first_start(self, value: bool):
+        validator.validate(value, bool)
+        self.__first_start = value
