@@ -15,6 +15,8 @@ class TestOSV(unittest.TestCase):
         self.service.file_name = "settings.json"
         self.service.load()
 
+    # test_osv.py — заменить метод test_osv_calculation
+
     def test_osv_calculation(self):
         start_date = datetime.fromisoformat("2025-10-01")
         end_date = datetime.fromisoformat("2025-10-31")
@@ -48,10 +50,11 @@ class TestOSV(unittest.TestCase):
             c = come[code]
             e = expense[code]
             fin = init + c - e
-            # Assert for known data
+            row = osv_model.create(nom, nom.range, init, c, e, fin)
             if nom.name == "Пшеничная мука":
-                self.assertEqual(init, 5.0)  # 5000g / 1000 = 5kg since range kg
+                self.assertEqual(init, 5.0)
                 self.assertEqual(c, 0.0)
-                self.assertEqual(e, 1.0)  # 1000g =1kg
+                self.assertEqual(e, 1.0)
                 self.assertEqual(fin, 4.0)
-            # Add more assertions for other noms
+                self.assertIsInstance(row.nomenclature, nomenclature_model)
+                self.assertEqual(row.nomenclature.name, "Пшеничная мука")

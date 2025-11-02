@@ -126,11 +126,14 @@ def get_osv():
         storage = next((s for s in service.data[reposity.storage_key()] if s.unique_code == storage_code), None)
         if not storage:
             return jsonify({"error": "Storage not found"}), 404
+
         transactions = service.data[reposity.transaction_key()]
         nomenclatures = service.data[reposity.nomenclature_key()]
+
         initial = defaultdict(float)
         come = defaultdict(float)
         expense = defaultdict(float)
+
         for trans in transactions:
             if trans.storage != storage:
                 continue
@@ -145,6 +148,7 @@ def get_osv():
                     come[nom.unique_code] += q_base
                 else:
                     expense[nom.unique_code] += abs(q_base)
+
         osv_list = []
         for nom in nomenclatures:
             code = nom.unique_code
@@ -152,26 +156,26 @@ def get_osv():
             c = come[code]
             e = expense[code]
             fin = init + c - e
-            row = osv_model()
-            row.nomenclature = nom.name
-            row.unit = nom.range.name
-            row.initial = init
-            row.come = c
-            row.expense = e
-            row.final = fin
+            row = osv_model.create(
+                nomenclature=nom,        
+                unit=nom.range,          
+                initial=init,
+                come=c,
+                expense=e,
+                final=fin
+            )
             osv_list.append(row)
+
         if fmt == "json":
             converted = [converter.convert(item) for item in osv_list]
             return jsonify(converted)
         logic = factory.create(fmt)
         text = logic.build(fmt, osv_list)
         return text, 200
+
     except ValueError:
         return jsonify({"error": "Invalid date format"}), 400
-    except operation_exception as e:
-        return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)

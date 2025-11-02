@@ -1,30 +1,32 @@
 from Src.Core.validator import validator
+from Src.Models.nomenclature_model import nomenclature_model
+from Src.Models.range_model import range_model
 
 class osv_model:
-    __nomenclature: str = ""
-    __unit: str = ""
+    __nomenclature: nomenclature_model = None
+    __unit: range_model = None
     __initial: float = 0.0
     __come: float = 0.0
     __expense: float = 0.0
     __final: float = 0.0
 
     @property
-    def nomenclature(self) -> str:
+    def nomenclature(self) -> nomenclature_model:
         return self.__nomenclature
 
     @nomenclature.setter
-    def nomenclature(self, value: str):
-        validator.validate(value, str)
-        self.__nomenclature = value.strip()
+    def nomenclature(self, value: nomenclature_model):
+        validator.validate(value, nomenclature_model)
+        self.__nomenclature = value
 
     @property
-    def unit(self) -> str:
+    def unit(self) -> range_model:
         return self.__unit
 
     @unit.setter
-    def unit(self, value: str):
-        validator.validate(value, str)
-        self.__unit = value.strip()
+    def unit(self, value: range_model):
+        validator.validate(value, range_model)
+        self.__unit = value
 
     @property
     def initial(self) -> float:
@@ -61,3 +63,17 @@ class osv_model:
     def final(self, value: float):
         validator.validate(value, float)
         self.__final = value
+
+
+    @staticmethod
+    def create(nomenclature: nomenclature_model, unit: range_model,
+               initial: float = 0.0, come: float = 0.0,
+               expense: float = 0.0, final: float = 0.0):
+        item = osv_model()
+        item.nomenclature = nomenclature
+        item.unit = unit
+        item.initial = initial
+        item.come = come
+        item.expense = expense
+        item.final = final
+        return item
