@@ -9,14 +9,14 @@ class reposity:
     @property
     def data(self):
         return self.__data
-    
+
     """
     Ключ для единц измерений
     """
     @staticmethod
     def range_key():
         return "range_model"
-    
+
 
     """
     Ключ для категорий
@@ -25,7 +25,7 @@ class reposity:
     def group_key():
         return "group_model"
     
-
+    
     """
     Ключ для номенклатуры
     """
@@ -40,7 +40,15 @@ class reposity:
     @staticmethod
     def receipt_key():
         return "receipt_model"
-    
+
+    @staticmethod
+    def storage_key():
+        return "storage_model"
+
+    @staticmethod
+    def transaction_key():
+        return "transaction_model"
+
     """
     Получить список всех ключей
     Источник: https://github.com/Alyona1619
@@ -56,7 +64,6 @@ class reposity:
 
         return result
 
-    
     """
     Инициализация
     """
@@ -64,5 +71,4 @@ class reposity:
         keys = reposity.keys()
         for key in keys:
             self.__data[ key ] = []
-    
-    
+            
